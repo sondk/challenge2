@@ -50,22 +50,23 @@ class ChallengeController extends Controller
     public function store(Request $request)
     {
         //
+        $file = $request->file('file');
+        $fileName = $file->getClientOriginalName();
+
         $request->validate([
             'challenge_name' => 'required',
             'hint' => 'required',
             'file' => 'required'
         ]);
 
-                
-        $file = $request->file('file');
-        $fileName = $file->getClientOriginalName();
-        $path = $file->storeAs('challenge_files', $fileName);
-
-        Challenge::create([
+        $challenge_id = DB::table('challenges')->insertGetId([
             'challenge_name' => $request['challenge_name'],
             'hint' => $request['hint'],
             'filename' => $fileName,
         ]);
+
+        
+        $path = $file->storeAs('challenge'.$challenge_id, $fileName);
 
         return redirect()->route('challenges.index')
             ->with('success', 'Challenges created successfully.');
@@ -124,18 +125,17 @@ class ChallengeController extends Controller
 
     public function submit(Request $request)
     {
-        $student_answer = $request['answer'];
+        $student_answer = $request['answer'].'.txt';
 
-        $answer = DB::table('challenges')->where([
-            ['filename', 'like', $student_answer.'.%'],
+        $challenge = DB::table('challenges')->where([
             ['id', '=', $request['challenge_id']],
         ])->get();
 
-        if(count($answer) > 0)
+        if(count($challenge) > 0)
         {
-            if(Storage::exists('challenge_files/'.$answer->first()->filename))
+            if(Storage::exists('challenge'.$challenge->first()->id.'/'.$student_answer))
             {
-                $content = Storage::get('challenge_files/'.$answer->first()->filename);  
+                $content = Storage::get('challenge'.$challenge->first()->id.'/'.$student_answer);  
                 return redirect()->back()
                             ->with('success', $content);
             }
@@ -143,13 +143,13 @@ class ChallengeController extends Controller
             {
                 return redirect()->back()
 
-                            ->with('success', 'Something went wrong, please try again');
+                            ->with('success', 'Incorrect');
             }
         }
         else
         {
             return redirect()->back()
-                            ->with('success', 'Incorrect');
+                            ->with('success', 'Something went wrong, please try again');
         }
         
     }

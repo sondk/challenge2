@@ -18,7 +18,6 @@ class ConversationController extends Controller
         Auth::user()->sent()->create([
             'body'       => $request['message'],
             'sent_to_id' => $request['sent_to_id'],
-            'sender_id' => Auth::id(),
         ]);
 
         return redirect()->route('users.show',$request['sent_to_id']);

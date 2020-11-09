@@ -131,6 +131,8 @@ class AssignmentController extends Controller
     public function destroy(Assignment $assignment)
     {
         //
+        DB::table('submissions')->where('assignment_id', '=', $assignment->id)->delete();
+
         $assignment->delete();
 
         return redirect()->route('assignments.index')

@@ -27,6 +27,7 @@ Route::post('post-login', 'App\Http\Controllers\LoginController@authenticate');
 Route::get('student', 'App\Http\Controllers\LoginController@student')->name('student')->middleware('auth', 'student');
 Route::get('teacher', 'App\Http\Controllers\LoginController@teacher')->name('teacher')->middleware('auth', 'teacher');
 
+Route::put('post-update', 'App\Http\Controllers\UserController@student_update');
 
 Route::post('message/store', 'App\Http\Controllers\ConversationController@sendMessage');
 Route::delete('/message/{message}', 'App\Http\Controllers\ConversationController@destroy');

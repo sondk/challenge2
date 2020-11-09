@@ -16,7 +16,7 @@ class UserController extends Controller
     {
         $this->middleware('auth');
 
-        $this->middleware('teacher')->except('index', 'show');
+        $this->middleware('teacher')->except('index', 'show', 'student_update');
 
     }
 
@@ -108,7 +108,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         //
-        return view('users.edit',compact('user'));
+            return view('users.edit',compact('user'));
     }
 
     /**
@@ -124,6 +124,8 @@ class UserController extends Controller
         $request->validate([
 
             'username' => 'required',
+            
+            'password' => 'required',
 
             'name' => 'required',
 
@@ -134,11 +136,13 @@ class UserController extends Controller
 
         ]);
 
-    
-
-        $user->update($request->all());
-
-    
+        $user->update([
+            'username' => $request['username'],
+            'password' => Hash::make($request['password']),
+            'name' => $request['name'],
+            'email' => $request['email'],
+            'phone_number' => $request['phone_number'], 
+        ]);
 
         return redirect()->route('users.index')
 
@@ -154,10 +158,47 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         //
+        DB::table('messages')->where([
+            ['sender_id', '=', $user->id],
+            ['sent_to_id', '=', $user->id],
+            ])->delete();
+        
+        DB::table('messages')->where([
+            ['sent_to_id', '=', $user->id],
+            ])->delete();
+        DB::table('submissions')->where('student_id', '=', $user->id)->delete();
+        
         $user->delete();
 
         return redirect()->route('users.index')
 
                         ->with('success','User deleted successfully');
+    }
+
+    public function student_update(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+
+            
+            'password' => 'required',
+
+            'email' => 'required',
+
+            'phone_number' => 'required',
+
+
+        ]);
+
+        $user->update([
+            'password' => Hash::make($request['password']),
+            'email' => $request['email'],
+            'phone_number' => $request['phone_number'], 
+        ]);
+
+        return redirect()->route('student')
+
+                        ->with('success','User updated successfully');
     }
 }
